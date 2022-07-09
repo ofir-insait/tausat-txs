@@ -55,30 +55,11 @@ def convert_packet_txt_to_binary(packet_txt):
     return dst
 
 
-def test_txt_to_bin_conversion():
-    paths = ["packets/tausat2_0.txt",
-             "packets/tausat2_1.txt",
-             "packets/tausat2_2.txt",
-             "packets/idle_packet_0.txt",
-             "packets/idle_packet_1.txt",
-             "packets/idle_packet_2.txt"]
-    for path in paths:
-        line = read_packet_txt_from_path(path)
-        dst = convert_packet_txt_to_binary(path)
-        with open(dst, 'rb') as f:
-            data = f.read()
-        assert len(data) == 259
-        #print(f'Packet length: {len(data)}')
-        decoded_line = ''.join('{:02x}'.format(d) for d in data)
-        assert line == decoded_line
-
-
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     args = parse_args(argv)
     convert_packet_txt_to_binary(args.packet)
-    test_txt_to_bin_conversion()
     print('Done')
 
 
