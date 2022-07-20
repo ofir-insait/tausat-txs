@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
+import struct
 
 from argparse import ArgumentParser
 
@@ -21,6 +22,8 @@ class TXSPacketDecoder:
 
     IDLE_VIRTUAL_CHANNEL_ID = 0
     TAU_VIRTUAL_CHANNEL_ID = 1
+
+    TAU_MAGIC = 0x01010202
 
     def __init__(self, packet_bytes):
         self.is_tau_packet = None
@@ -62,15 +65,74 @@ class TXSPacketDecoder:
                                                TXSPacketDecoder.PAYLOAD_BYTES_OFFSET + TXSPacketDecoder.PAYLOAD_BYTES_SIZE]
         self.decoded_payload_bytes = self._decode_bytes(self.payload_bytes)
 
+    def _decode_tau_payload(self):
+        """Decodes TAU packets.
+
+        Each TAU packet has the following structure:
+        typedef struct inklajn_spl_TM
+        {
+            uint8_t type; //service type
+            uint8_t subType; //service sub type
+            unsigned short length;//Length of data array
+            time_unix time;//Unix time
+            byte data[SIZE_TXFRAME - SPL_TM_HEADER_SIZE];//the data in the packet
+        }
+
+        `time` is always filled with 0xdeadbeef magic.
+               This allows us to identify our packets in high confidence.
+        `length` - size in bytes, tells how many bytes are used in the `data` field.
+        """
+        assert hasattr(self, 'decoded_payload_bytes')
+
+        TYPE_OFFSET = 0
+        TYPE_SIZE = 1
+        SUBTYPE_OFFSET = 1
+        SUBTYPE_SIZE = 1
+        LENGTH_OFFSET = 2
+        LENGTH_SIZE = 2
+        TIME_UNIX_OFFSET = 4
+        TIME_SIZE = 4
+        DATA_OFFSET = 8
+
+        TOTAL_TAU_HEADER_SIZE = TYPE_SIZE + SUBTYPE_SIZE + LENGTH_SIZE + TIME_SIZE
+
+        self.tau_type = struct.unpack(
+            '<B', self.decoded_payload_bytes[TYPE_OFFSET:TYPE_OFFSET + TYPE_SIZE])[0]
+        self.tau_subtype = struct.unpack(
+            '<B', self.decoded_payload_bytes[SUBTYPE_OFFSET:SUBTYPE_OFFSET + SUBTYPE_SIZE])[0]
+        self.tau_orig_length = struct.unpack(
+            '<H', self.decoded_payload_bytes[LENGTH_OFFSET:LENGTH_OFFSET + LENGTH_SIZE])[0]
+        self.tau_length = min(self.tau_orig_length, len(
+            self.decoded_payload_bytes) - TOTAL_TAU_HEADER_SIZE)
+        self.tau_time_unix = struct.unpack(
+            '<I', self.decoded_payload_bytes[TIME_UNIX_OFFSET:TIME_UNIX_OFFSET + TIME_SIZE])[0]
+        self.tau_data = self.decoded_payload_bytes[DATA_OFFSET:DATA_OFFSET + self.tau_length]
+
     def _decode_packet(self):
         assert len(self.packet_bytes) == TXS_PACKET_LEN
         self._decode_header()
         self._decode_payload()
+        self._decode_tau_payload()
+
+    @staticmethod
+    def bytes_to_hexstr(bytes_):
+        return ''.join('{:02x}'.format(b) for b in bytes_)
 
     def __str__(self):
-        result = "Packet type: " + self.virtual_channel_id_str
-        result = "Payload: " + ''.join('{:02x}'.format(b)
-                                       for b in self.decoded_payload_bytes)
+        result = f"Packet type: {self.virtual_channel_id_str}\n"
+        decoded_hex_bytes = TXSPacketDecoder.bytes_to_hexstr(
+            self.decoded_payload_bytes)
+        result += f"Payload: {self.decoded_payload_bytes}\n"
+
+        if self.is_tau_packet:
+            result += "TAU packet info: \n"
+            result += f"  Type: {self.tau_type}\n"
+            result += f"  Sub type: {self.tau_subtype}\n"
+            result += f"  Length: {self.tau_subtype}\n"
+            result += f"  Magic (unixtime): {'0x{:08x}'.format(self.tau_time_unix)}\n"
+            result += f"  Length: {self.tau_length}, Orig Length: {self.tau_orig_length}\n"
+            result += f"  Data: {TXSPacketDecoder.bytes_to_hexstr(self.tau_data)}\n"
+
         return result
 
 

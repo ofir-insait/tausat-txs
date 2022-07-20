@@ -66,3 +66,18 @@ def test_virtual_channel_decode_counter_150_to_255():
         total_len = 255 - 150 + 1
         assert txs_packet.decoded_payload_bytes[30:30 + total_len] == bytes(
             range(150, 256))
+
+
+def test_prefix_length_and_magic_decoding():
+    paths = ["packets/tausat2_prefix_length_packet_30_ones.bin"]
+    for path in paths:
+        with open(path, 'rb') as f:
+            packet_data = f.read()
+        txs_packet = TXSPacketDecoder(packet_data)
+        assert txs_packet.virtual_channel_id == 1
+        assert txs_packet.tau_type == 1
+        assert txs_packet.tau_subtype == 2
+        assert txs_packet.tau_length == 30
+        assert txs_packet.tau_time_unix == 0x01010202
+        assert txs_packet.tau_length == len(txs_packet.tau_data)
+        assert txs_packet.tau_data == bytes([1]) * 30
