@@ -1,0 +1,19 @@
+# Virtual channel id 1
+#
+# TAU layout:
+#         typedef struct inklajn_spl_TM
+#        {
+#            uint8_t type; //service type
+#            uint8_t subType; //service sub type
+#            unsigned short length;//Length of data array
+#            time_unix time;//Unix time
+#            byte data[SIZE_TXFRAME - SPL_TM_HEADER_SIZE];//the data in the packet
+#        }
+#
+# Payload: type = 1
+#          subType = 2
+#          legnth = 32
+#          time = 0x01010202
+#          data = 0xdeadbeef, 0xdabad00d, 0xdeadbeef, 0xdabad00d,
+#                 0xdeadbeef, 0xdabad00d, 0xdeadbeef, 0xdabad00d
+0005e433165fcaf5fffffd8e50534b32000000008321616a00041b08000000eb0000000300ac25000000ccac2e00acaccccc4033ae5f457a4a264033ae5f457a4a264033ae5f457a4a264033ae5f457a4a26000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

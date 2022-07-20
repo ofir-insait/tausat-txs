@@ -124,11 +124,10 @@ class TXSPacketDecoder:
             self.decoded_payload_bytes)
         result += f"Payload: {self.decoded_payload_bytes}\n"
 
-        if self.is_tau_packet:
+        if self.is_tau_packet and self.tau_time_unix == TXSPacketDecoder.TAU_MAGIC:
             result += "TAU packet info: \n"
             result += f"  Type: {self.tau_type}\n"
             result += f"  Sub type: {self.tau_subtype}\n"
-            result += f"  Length: {self.tau_subtype}\n"
             result += f"  Magic (unixtime): {'0x{:08x}'.format(self.tau_time_unix)}\n"
             result += f"  Length: {self.tau_length}, Orig Length: {self.tau_orig_length}\n"
             result += f"  Data: {TXSPacketDecoder.bytes_to_hexstr(self.tau_data)}\n"
@@ -148,6 +147,7 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     args = parse_args(argv)
+    print(f'Input file: {args.packet}')
     with open(args.packet, 'rb') as f:
         packet_data = f.read()
     txs_packet = TXSPacketDecoder(packet_data)

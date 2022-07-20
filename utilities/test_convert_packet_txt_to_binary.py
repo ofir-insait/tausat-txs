@@ -16,7 +16,8 @@ def test_txt_to_bin_conversion():
              "packets/tausat2_counter_0_to_29.txt",
              "packets/tausat2_counter_30_to_149.txt",
              "packets/tausat2_counter_150_to_255.txt",
-             "packets/tausat2_prefix_length_packet_30_ones.txt"]
+             "packets/tausat2_prefix_length_packet_30_ones.txt",
+             "packets/tausat2_prefix_length_packet_8_dwords.txt"]
     for path in paths:
         path_ = os.path.join(os.path.dirname(__file__), os.pardir, path)
         line = read_packet_txt_from_path(path_)
