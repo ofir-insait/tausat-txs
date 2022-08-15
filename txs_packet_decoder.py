@@ -124,7 +124,7 @@ class TXSPacketDecoder:
             self.decoded_payload_bytes)
         result += f"Payload: {self.decoded_payload_bytes}\n"
 
-        if self.is_tau_packet and self.tau_time_unix == TXSPacketDecoder.TAU_MAGIC:
+        if self.is_tausat_packet():
             result += "TAU packet info: \n"
             result += f"  Type: {self.tau_type}\n"
             result += f"  Sub type: {self.tau_subtype}\n"
@@ -134,6 +134,8 @@ class TXSPacketDecoder:
 
         return result
 
+    def is_tausat_packet(self):
+        return self.is_tau_packet and self.tau_time_unix == TXSPacketDecoder.TAU_MAGIC
 
 def parse_args(argv):
     parser = ArgumentParser(

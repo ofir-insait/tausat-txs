@@ -2,6 +2,8 @@
 import os
 import socket
 
+from txs_packet_decoder import TXSPacketDecoder
+
 ip = "132.66.193.14"
 port = 5005
 
@@ -21,9 +23,11 @@ packet_num = 0
 while True:
     print("####### Server is listening #######")
     data, address = s.recvfrom(PACKET_LEN)
-    print(f"\n\n Server received: {str(len(data))} bytes\n\n")
-    print(data)
-    packet_num += 1
-    packet_fname = f'packets/packet_{packet_num}.bin'
-    with open(packet_fname, 'wb') as f:
-        f.write(data)
+    txs_packet = TXSPacketDecoder(data)
+    if txs_packet.is_tausat_packet():
+        print(f"\n\n Server received: {str(len(data))} bytes\n\n")
+        print(data)
+        packet_num += 1
+        packet_fname = f'packets/packet_{packet_num}.bin'
+        with open(packet_fname, 'wb') as f:
+            f.write(data)
