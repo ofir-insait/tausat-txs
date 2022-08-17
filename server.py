@@ -19,15 +19,21 @@ PACKET_LEN = 259
 if not os.path.exists('packets'):
     os.mkdir('packets')
 
+should_decode_packets = int(os.getenv('TAU_SAT_DECODE_PACKETS', 0))
+should_dump_packets = int(os.getenv('TAU_SAT_DUMP_PACKETS', 1))
+
 packet_num = 0
 while True:
     print("####### Server is listening #######")
     data, address = s.recvfrom(PACKET_LEN)
     txs_packet = TXSPacketDecoder(data)
     if txs_packet.is_tausat_packet():
-        print(f"\n\n Server received: {str(len(data))} bytes\n\n")
-        print(data)
-        packet_num += 1
-        packet_fname = f'packets/packet_{packet_num}.bin'
-        with open(packet_fname, 'wb') as f:
-            f.write(data)
+        if should_dump_packets:
+            print(f"\n\n Server received: {str(len(data))} bytes\n\n")
+            print(data)
+            packet_num += 1
+            packet_fname = f'packets/packet_{packet_num}.bin'
+            with open(packet_fname, 'wb') as f:
+                f.write(data)
+        if should_decode_packets:
+            print(str(txs_packet))
